@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>בדיקת מוכנות ללשון | עינת</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #F3F2EE;
+      --card:     #FFFFFF;
+      --text:     #111827;
+      --muted:    #6B7280;
+      --border:   #E5E7EB;
+      --read:     #2563EB;
+      --read-bg:  #EFF6FF;
+      --gram:     #D97706;
+      --gram-bg:  #FFFBEB;
+      --spell:    #16A34A;
+      --spell-bg: #F0FDF4;
+      --vocab:    #9333EA;
+      --vocab-bg: #FAF5FF;
+    }
+
+    body {
+      font-family: 'Heebo', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ───── SCREEN SYSTEM ───── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: block; animation: fadeUp .35s ease both; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─────────────── WELCOME ─────────────── */
+    #screen-welcome { display: none; align-items: center; justify-content: center; padding: 28px 16px; }
+    #screen-welcome.active { display: flex; flex-direction: column; }
+
+    .welcome-inner { width: 100%; max-width: 520px; }
+
+    .brand-eyebrow {
+      text-align: center;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 18px;
+    }
+
+    .hero-card {
+      background: var(--card);
+      border-radius: 28px;
+      padding: 44px 36px 36px;
+      box-shadow: 0 8px 48px rgba(0,0,0,.09), 0 1px 3px rgba(0,0,0,.04);
+      text-align: center;
+    }
+
+    .hero-icon  { font-size: 62px; display: block; margin-bottom: 20px; }
+    .hero-title { font-size: 30px; font-weight: 900; line-height: 1.2; margin-bottom: 10px; }
+    .hero-sub   { font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 32px; }
+
+    /* Loading state */
+    .loading-state { padding: 16px 0 8px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 34px; height: 34px;
+      border: 3px solid var(--border);
+      border-top-color: var(--read);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    .loading-text { font-size: 14px; color: var(--muted); }
+
+    .error-state { padding: 8px 0; }
+    .error-icon  { font-size: 36px; margin-bottom: 10px; }
+    .error-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; color: #B91C1C; }
+    .error-body  { font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .error-body code {
+      background: var(--bg); padding: 2px 8px; border-radius: 6px;
+      font-family: monospace; font-size: 12px;
+    }
+
+    /* Grade selection */
+    #grade-section { display: none; }
+    #grade-section.visible { display: block; }
+
+    .grade-prompt { font-size: 13px; font-weight: 700; text-align: right; margin-bottom: 12px; }
+
+    .grade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+
+    .grade-btn {
+      border: 2px solid var(--border);
+      background: var(--card);
+      border-radius: 18px;
+      padding: 24px 14px;
+      cursor: pointer;
+      font-family: 'Heebo', sans-serif;
+      text-align: center;
+      transition: all .2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .grade-btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--read-bg), var(--vocab-bg));
+      opacity: 0; transition: opacity .2s;
+    }
+
+    .grade-btn:hover { border-color: var(--read); transform: translateY(-3px); box-shadow: 0 10px 28px rgba(37,99,235,.13); }
+    .grade-btn:hover::after { opacity: 1; }
+    .grade-btn > * { position: relative; z-index: 1; }
+
+    .grade-icon { font-size: 44px; display: block; margin-bottom: 10px; }
+    .grade-name { font-size: 18px; font-weight: 900; display: block; }
+    .grade-sub  { font-size: 12px; color: var(--muted); display: block; margin-top: 4px; }
+
+    .trust-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    .trust-chip {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 13px; color: var(--muted);
+      background: var(--bg); padding: 6px 14px; border-radius: 100px;
+    }
+
+    /* ─────────────── QUIZ ─────────────── */
+    #screen-quiz { display: none; flex-direction: column; padding: 16px; max-width: 640px; margin: 0 auto; width: 100%; }
+    #screen-quiz.active { display: flex; }
+
+    .quiz-top { margin-bottom: 20px; padding-top: 8px; }
+
+    .quiz-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .quiz-step  { font-size: 13px; font-weight: 500; color: var(--muted); }
+    .quiz-tally { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+    .pbar-track { height: 7px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .pbar-fill  {
+      height: 100%; border-radius: 100px; background: var(--read); width: 0%;
+      transition: width .45s cubic-bezier(.4,0,.2,1), background-color .4s ease;
+    }
+
+    .q-card { background: var(--card); border-radius: 22px; padding: 28px 22px; box-shadow: 0 2px 18px rgba(0,0,0,.06); margin-bottom: 14px; }
+
+    .cat-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; margin-bottom: 20px; }
+    .q-text   { font-size: 19px; font-weight: 700; line-height: 1.6; }
+
+    .opts-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+    .opt-btn {
+      display: flex; align-items: center; gap: 12px;
+      border: 2px solid var(--border); background: var(--card);
+      border-radius: 14px; padding: 15px 18px;
+      cursor: pointer; transition: all .15s ease;
+      font-family: 'Heebo', sans-serif; font-size: 16px; font-weight: 500;
+      color: var(--text); text-align: right; width: 100%;
+    }
+
+    .opt-letter {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: var(--muted); flex-shrink: 0;
+      transition: all .15s;
+    }
+
+    .opt-btn:hover:not(:disabled) { border-color: #93C5FD; background: #F8FAFF; }
+    .opt-btn.correct { border-color: var(--spell) !important; background: var(--spell-bg) !important; }
+    .opt-btn.correct .opt-letter { background: var(--spell); color: #fff; }
+    .opt-btn.wrong { border-color: #DC2626 !important; background: #FEF2F2 !important; }
+    .opt-btn.wrong .opt-letter { background: #DC2626; color: #fff; }
+    .opt-btn.faded { opacity: .35; }
+    .opt-btn:disabled { cursor: default; }
+
+    .feedback-box {
+      border-radius: 16px; padding: 14px 18px;
+      margin-bottom: 12px; border-right: 5px solid; display: none;
+    }
+    .feedback-box.ok  { background: var(--spell-bg); border-color: var(--spell); }
+    .feedback-box.err { background: #FEF2F2;          border-color: #DC2626; }
+
+    .fb-title { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+    .feedback-box.ok  .fb-title { color: #15803D; }
+    .feedback-box.err .fb-title { color: #B91C1C; }
+    .fb-body { font-size: 14px; color: var(--muted); line-height: 1.55; }
+
+    .next-btn {
+      width: 100%; padding: 17px; background: #111827; color: #fff;
+      border: none; border-radius: 14px;
+      font-family: 'Heebo', sans-serif; font-size: 17px; font-weight: 700;
+      cursor: pointer; display: none; transition: all .2s;
+    }
+    .next-btn:hover { background: #1F2937; transform: translateY(-1px); }
+
+    /* ─────────────── RESULTS ─────────────── */
+    #screen-results { display: none; flex-direction: column; padding: 16px 16px 52px; max-width: 640px; margin: 0 auto; width: 100%; }
+    #screen-results.active { display: flex; }
+
+    .results-hero {
+      background: var(--card); border-radius: 24px;
+      padding: 36px 24px 28px; text-align: center;
+      box-shadow: 0 2px 20px rgba(0,0,0,.06); margin-bottom: 16px;
+    }
+
+    .results-emoji { font-size: 54px; display: block; margin-bottom: 10px; }
+    .results-h     { font-size: 26px; font-weight: 900; margin-bottom: 6px; }
+    .results-sub   { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+
+    .score-circle {
+      width: 112px; height: 112px; border-radius: 50%;
+      margin: 0 auto 18px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #fff; font-weight: 900;
+    }
+    .score-num { font-size: 32px; line-height: 1; }
+    .score-lbl { font-size: 11px; opacity: .8; margin-top: 3px; }
+
+    .stars-row  { display: flex; justify-content: center; gap: 3px; font-size: 22px; margin-bottom: 10px; }
+    .results-msg { font-size: 14px; color: var(--muted); }
+
+    .section-hd {
+      font-size: 11px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); margin: 24px 0 12px;
+    }
+
+    .cat-result {
+      background: var(--card); border-radius: 18px;
+      padding: 20px 18px; margin-bottom: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.04); border-right: 5px solid;
+    }
+
+    .cat-top   { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .cat-left-g { display: flex; align-items: center; gap: 10px; }
+
+    .cat-ico {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+
+    .cat-n     { font-size: 16px; font-weight: 700; }
+    .cat-score { font-size: 18px; font-weight: 900; }
+
+    .cat-pb-track { height: 5px; background: var(--border); border-radius: 100px; overflow: hidden; margin-bottom: 12px; }
+    .cat-pb-fill  { height: 100%; border-radius: 100px; width: 0; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+    .cat-feedback { display: flex; gap: 8px; align-items: flex-start; }
+    .cat-fb-icon  { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .cat-fb-text  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ───── EINAT CARD ───── */
+    .einat-card {
+      background: linear-gradient(145deg, #0F172A 0%, #1E3A5F 60%, #0F2A4A 100%);
+      border-radius: 24px; padding: 34px 24px;
+      text-align: center; color: #fff; margin-top: 24px;
+      position: relative; overflow: hidden;
+    }
+    .einat-card::before {
+      content: ''; position: absolute; top: -50px; left: -50px;
+      width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,.04);
+      pointer-events: none;
+    }
+    .einat-card::after {
+      content: ''; position: absolute; bottom: -30px; right: -30px;
+      width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,.03);
+      pointer-events: none;
+    }
+
+    .einat-av {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(255,255,255,.13); margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px; position: relative; z-index: 1;
+    }
+
+    .einat-name { font-size: 24px; font-weight: 900; margin-bottom: 4px; position: relative; z-index: 1; }
+    .einat-role { font-size: 13px; opacity: .6; margin-bottom: 20px; position: relative; z-index: 1; }
+    .einat-copy { font-size: 15px; line-height: 1.7; opacity: .9; margin-bottom: 26px; position: relative; z-index: 1; }
+
+    .wa-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #25D366; color: #fff;
+      padding: 15px 32px; border-radius: 100px;
+      font-family: 'Heebo', sans-serif; font-size: 16px; font-weight: 700;
+      text-decoration: none; transition: all .2s;
+      box-shadow: 0 6px 24px rgba(37,211,102,.4);
+      position: relative; z-index: 1;
+    }
+    .wa-btn:hover { background: #1FAD56; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(37,211,102,.55); }
+
+    .restart-btn {
+      display: block; width: 100%; margin-top: 14px;
+      padding: 14px; border: 2px solid var(--border); border-radius: 14px;
+      background: transparent; font-family: 'Heebo', sans-serif;
+      font-size: 15px; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: all .2s;
+    }
+    .restart-btn:hover { border-color: #93C5FD; color: var(--read); }
+
+    /* ───── RESPONSIVE ───── */
+    @media (max-width: 480px) {
+      .hero-card { padding: 30px 20px 26px; border-radius: 22px; }
+      .hero-title { font-size: 24px; }
+      .q-text { font-size: 17px; }
+      #screen-quiz.active, #screen-results.active { padding: 12px 12px 40px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     WELCOME SCREEN
+     ══════════════════════════════════ -->
+<div id="screen-welcome" class="screen">
+  <div class="welcome-inner">
+    <p class="brand-eyebrow">בדיקת מוכנות ללשון</p>
+
+    <div class="hero-card">
+      <span class="hero-icon">📚</span>
+      <h1 class="hero-title">מה רמת הלשון שלכם?</h1>
+      <p class="hero-sub">בוחן קצר ב-20 שאלות שיגלה לכם בדיוק<br>
+        איפה אתם חזקים — ואיפה כדאי לחזק.</p>
+
+      <!-- Loading / error state -->
+      <div id="loading-state" class="loading-state">
+        <div class="spinner"></div>
+        <p class="loading-text">טוען שאלות...</p>
+      </div>
+
+      <!-- Grade selection — shown after JSON loads -->
+      <div id="grade-section">
+        <p class="grade-prompt">בחרו שלב לימודים:</p>
+        <div class="grade-grid" id="grade-grid"></div>
+        <div class="trust-row">
+          <span class="trust-chip">⏱ כ-5 דקות</span>
+          <span class="trust-chip">✅ בחינם לחלוטין</span>
+          <span class="trust-chip">📊 תוצאות מיידיות</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     QUIZ SCREEN
+     ══════════════════════════════════ -->
+<div id="screen-quiz" class="screen">
+
+  <div class="quiz-top">
+    <div class="quiz-meta">
+      <span class="quiz-step"  id="quiz-step">שאלה 1 מתוך 20</span>
+      <span class="quiz-tally" id="quiz-tally">✓ 0</span>
+    </div>
+    <div class="pbar-track"><div class="pbar-fill" id="pbar"></div></div>
+  </div>
+
+  <div class="q-card">
+    <span class="cat-pill" id="cat-pill"></span>
+    <p class="q-text"      id="q-text"></p>
+  </div>
+
+  <div class="opts-list"     id="opts-list"></div>
+
+  <div class="feedback-box" id="feedback-box">
+    <div class="fb-title"   id="fb-title"></div>
+    <div class="fb-body"    id="fb-body"></div>
+  </div>
+
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">המשך ←</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     RESULTS SCREEN
+     ══════════════════════════════════ -->
+<div id="screen-results" class="screen">
+
+  <div class="results-hero">
+    <span class="results-emoji" id="res-emoji">🌟</span>
+    <h2 class="results-h">התוצאות שלך!</h2>
+    <p class="results-sub"   id="res-sub"></p>
+    <div class="score-circle" id="res-circle">
+      <span class="score-num" id="res-pct">--</span>
+      <span class="score-lbl">ציון</span>
+    </div>
+    <div class="stars-row"   id="res-stars"></div>
+    <p class="results-msg"   id="res-msg"></p>
+  </div>
+
+  <p class="section-hd">פירוט לפי תחומים</p>
+  <div id="cat-results"></div>
+
+  <!-- ══ EINAT CARD ══ -->
+  <div class="einat-card">
+    <div class="einat-av">👩‍🏫</div>
+    <div class="einat-name">עינת</div>
+    <!-- ✏️ עדכנו את הכותרת / התפקיד -->
+    <div class="einat-role">מורה ללשון | מחנכת ומטפחת</div>
+    <p class="einat-copy">
+      רוצים לשפר את הציון? עינת מתמחה בדיוק בתחומים שצריך לחזק,
+      ומתאימה את השיעורים לרמה ולצרכים של כל תלמיד.
+    </p>
+    <!-- ✏️ החליפו את 972501234567 במספר הטלפון האמיתי של עינת -->
+    <a class="wa-btn"
+       href="https://wa.me/972501234567?text=%D7%A9%D7%9C%D7%95%D7%9D%20%D7%A2%D7%99%D7%A0%D7%AA%2C%20%D7%A8%D7%90%D7%99%D7%AA%D7%99%20%D7%90%D7%AA%20%D7%94%D7%91%D7%95%D7%97%D7%9F%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%95%D7%93"
+       target="_blank" rel="noopener">
+      💬 דברו עם עינת בוואטסאפ
+    </a>
+  </div>
+
+  <button class="restart-btn" onclick="restartQuiz()">🔄 התחל מחדש</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     JAVASCRIPT
+     ══════════════════════════════════ -->
+<script>
+
+/* ════════════════════════════════════════
+   הגדרות קטגוריות (אל תשנו את המפתחות)
+   ════════════════════════════════════════ */
+const CATS = {
+  reading: { name: 'הבנת הנקרא', icon: '📖', color: '#2563EB', bg: '#EFF6FF' },
+  grammar: { name: 'דקדוק',       icon: '✏️', color: '#D97706', bg: '#FFFBEB' },
+  spelling:{ name: 'כתיב',        icon: '✍️', color: '#16A34A', bg: '#F0FDF4' },
+  vocab:   { name: 'אוצר מילים', icon: '💡', color: '#9333EA', bg: '#FAF5FF' }
+};
+
+/* ════════════════════════════════════════
+   מצב גלובלי
+   ════════════════════════════════════════ */
+let DATA = null;
+
+let S = {
+  levelKey:   null,
+  levelName:  '',
+  questions:  [],
+  idx:        0,
+  scores:     {},
+  totals:     {}
+};
+
+/* ════════════════════════════════════════
+   טעינת JSON
+   ════════════════════════════════════════ */
+async function init() {
+  try {
+    const res = await fetch('questions.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    DATA = await res.json();
+    onDataLoaded();
+  } catch (e) {
+    showLoadError();
+  }
+}
+
+function onDataLoaded() {
+  /* Build grade buttons dynamically */
+  const grid = document.getElementById('grade-grid');
+  Object.entries(DATA.levels).forEach(([key, level]) => {
+    const btn = document.createElement('button');
+    btn.className = 'grade-btn';
+    btn.onclick = () => startQuiz(key);
+    btn.innerHTML = `
+      <span class="grade-icon">${level.icon}</span>
+      <span class="grade-name">${level.displayName}</span>
+      <span class="grade-sub">${level.subtitle}</span>`;
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('loading-state').style.display  = 'none';
+  document.getElementById('grade-section').style.display  = 'block';
+}
+
+function showLoadError() {
+  const ls = document.getElementById('loading-state');
+  ls.innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-title">לא ניתן לטעון את השאלות</div>
+      <div class="error-body">
+        יש לפתוח את האתר מתוך שרת.<br><br>
+        פתרון מהיר — פתחו טרמינל בתיקיית הפרויקט והריצו:<br>
+        <code>python3 -m http.server 8000</code><br><br>
+        ואז פתחו בדפדפן: <strong>http://localhost:8000</strong>
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════
+   עזרים
+   ════════════════════════════════════════ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* מערבב שאלות כך שהקטגוריות מתחלפות */
+function interleave(questions) {
+  const groups = {};
+  questions.forEach(q => {
+    if (!groups[q.category]) groups[q.category] = [];
+    groups[q.category].push(q);
+  });
+  Object.keys(groups).forEach(k => { groups[k] = shuffle(groups[k]); });
+
+  const keys    = Object.keys(groups);
+  const maxLen  = Math.max(...keys.map(k => groups[k].length));
+  const out     = [];
+  for (let i = 0; i < maxLen; i++) {
+    keys.forEach(k => { if (i < groups[k].length) out.push(groups[k][i]); });
+  }
+  return out;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ════════════════════════════════════════
+   התחלת הבוחן
+   ════════════════════════════════════════ */
+function startQuiz(levelKey) {
+  const level  = DATA.levels[levelKey];
+  S.levelKey   = levelKey;
+  S.levelName  = level.displayName;
+  S.questions  = interleave(level.questions);
+  S.idx        = 0;
+  S.scores     = { reading: 0, grammar: 0, spelling: 0, vocab: 0 };
+  S.totals     = { reading: 0, grammar: 0, spelling: 0, vocab: 0 };
+  S.questions.forEach(q => S.totals[q.category]++);
+
+  showScreen('screen-quiz');
+  renderQ();
+}
+
+/* ════════════════════════════════════════
+   רינדור שאלה
+   ════════════════════════════════════════ */
+function renderQ() {
+  const q     = S.questions[S.idx];
+  const cat   = CATS[q.category];
+  const total = S.questions.length;
+
+  /* Progress bar */
+  const pbar = document.getElementById('pbar');
+  pbar.style.width           = (S.idx / total * 100) + '%';
+  pbar.style.backgroundColor = cat.color;
+
+  document.getElementById('quiz-step').textContent  = `שאלה ${S.idx + 1} מתוך ${total}`;
+  const correct = Object.values(S.scores).reduce((a, b) => a + b, 0);
+  document.getElementById('quiz-tally').textContent = `✓ ${correct}`;
+
+  /* Category pill */
+  const pill = document.getElementById('cat-pill');
+  pill.textContent      = `${cat.icon} ${cat.name}`;
+  pill.style.background = cat.bg;
+  pill.style.color      = cat.color;
+
+  /* Question */
+  document.getElementById('q-text').textContent = q.question;
+
+  /* Options */
+  const letters = ['א', 'ב', 'ג', 'ד'];
+  const list    = document.getElementById('opts-list');
+  list.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.onclick   = () => selectAnswer(i);
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${opt}`;
+    list.appendChild(btn);
+  });
+
+  /* Reset */
+  const fb = document.getElementById('feedback-box');
+  fb.style.display = 'none';
+  fb.className     = 'feedback-box';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+/* ════════════════════════════════════════
+   בחירת תשובה
+   ════════════════════════════════════════ */
+function selectAnswer(chosen) {
+  const q         = S.questions[S.idx];
+  const isCorrect = chosen === q.correct;
+
+  document.querySelectorAll('.opt-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if      (i === q.correct)              btn.classList.add('correct');
+    else if (i === chosen && !isCorrect)   btn.classList.add('wrong');
+    else                                   btn.classList.add('faded');
+  });
+
+  if (isCorrect) S.scores[q.category]++;
+
+  /* Feedback */
+  const fb = document.getElementById('feedback-box');
+  document.getElementById('fb-title').textContent = isCorrect ? '✅ כל הכבוד! תשובה נכונה' : '❌ לא נכון הפעם';
+  document.getElementById('fb-body').textContent  = q.explanation;
+  fb.className     = 'feedback-box ' + (isCorrect ? 'ok' : 'err');
+  fb.style.display = 'block';
+
+  /* Next button */
+  const nb   = document.getElementById('next-btn');
+  const last = S.idx === S.questions.length - 1;
+  nb.textContent   = last ? '🎯 לצפייה בתוצאות' : 'המשך ←';
+  nb.style.display = 'block';
+}
+
+/* ════════════════════════════════════════
+   שאלה הבאה
+   ════════════════════════════════════════ */
+function nextQuestion() {
+  if (S.idx < S.questions.length - 1) { S.idx++; renderQ(); }
+  else showResults();
+}
+
+/* ════════════════════════════════════════
+   מסך תוצאות
+   ════════════════════════════════════════ */
+function showResults() {
+  showScreen('screen-results');
+
+  const totalQ  = S.questions.length;
+  const correct = Object.values(S.scores).reduce((a, b) => a + b, 0);
+  const pct     = Math.round((correct / totalQ) * 100);
+  const stars   = Math.max(1, Math.round(pct / 20));
+
+  document.getElementById('res-sub').textContent = `${S.levelName} | ${correct} נכונות מתוך ${totalQ}`;
+
+  /* Score circle */
+  const circle = document.getElementById('res-circle');
+  circle.style.background =
+    pct >= 80 ? 'linear-gradient(135deg,#16A34A,#4ADE80)' :
+    pct >= 60 ? 'linear-gradient(135deg,#2563EB,#60A5FA)' :
+                'linear-gradient(135deg,#D97706,#FCD34D)';
+  document.getElementById('res-pct').textContent = pct + '%';
+
+  document.getElementById('res-emoji').textContent = pct >= 85 ? '🌟' : pct >= 70 ? '👍' : pct >= 50 ? '📚' : '💪';
+
+  document.getElementById('res-stars').innerHTML = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
+
+  const msgs = ['', 'בוא נתחיל לעבוד יחד — עינת תעזור לכם להתקדם!',
+    'יש עבודה לעשות, אבל זה בדיוק בשביל זה אנחנו כאן.',
+    'תוצאה סבירה — יש תחומים שכדאי לחזק.',
+    'כל הכבוד! תוצאה מצוינת עם מקום קטן לשיפור.',
+    'מדהים! שולטים בחומר ברמה גבוהה מאוד.'];
+  document.getElementById('res-msg').textContent = msgs[stars];
+
+  /* Category cards */
+  const container = document.getElementById('cat-results');
+  container.innerHTML = '';
+
+  Object.entries(CATS).forEach(([key, cat]) => {
+    const c    = S.scores[key] || 0;
+    const t    = S.totals[key] || 0;
+    const w    = t - c;
+    const good = w <= 1;
+    const pctC = t > 0 ? Math.round((c / t) * 100) : 0;
+
+    const msg = good
+      ? `יפה מאוד! אתם חזקים ב${cat.name}. המשיכו לשמור על הרמה.`
+      : `כדאי לחזק את ${cat.name}. עינת יכולה לעזור בדיוק בתחום הזה.`;
+
+    const card = document.createElement('div');
+    card.className = 'cat-result';
+    card.style.borderColor = cat.color;
+    card.innerHTML = `
+      <div class="cat-top">
+        <div class="cat-left-g">
+          <div class="cat-ico" style="background:${cat.bg}">${cat.icon}</div>
+          <span class="cat-n">${cat.name}</span>
+        </div>
+        <span class="cat-score" style="color:${cat.color}">${c}/${t}</span>
+      </div>
+      <div class="cat-pb-track">
+        <div class="cat-pb-fill" style="background:${cat.color}" data-w="${pctC}"></div>
+      </div>
+      <div class="cat-feedback">
+        <span class="cat-fb-icon">${good ? '✅' : '⚠️'}</span>
+        <span class="cat-fb-text">${msg}</span>
+      </div>`;
+    container.appendChild(card);
+  });
+
+  /* Animate progress bars */
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.cat-pb-fill').forEach(el => {
+        el.style.width = el.dataset.w + '%';
+      });
+    }, 150);
+  });
+}
+
+/* ════════════════════════════════════════
+   התחל מחדש
+   ════════════════════════════════════════ */
+function restartQuiz() {
+  S = { levelKey: null, levelName: '', questions: [], idx: 0,
+        scores: {}, totals: {} };
+  showScreen('screen-welcome');
+}
+
+/* ════════════════════════════════════════
+   הפעלה
+   ════════════════════════════════════════ */
+showScreen('screen-welcome');
+init();
+</script>
+</body>
+</html>
