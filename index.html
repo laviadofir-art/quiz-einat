@@ -688,6 +688,10 @@ function showResults() {
   Object.entries(CATS).forEach(([key, cat]) => {
     const c    = S.scores[key] || 0;
     const t    = S.totals[key] || 0;
+
+    // Show only categories that had questions in the selected test.
+    if (t === 0) return;
+
     const w    = t - c;
     const good = w <= 1;
     const pctC = t > 0 ? Math.round((c / t) * 100) : 0;
