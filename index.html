@@ -14,14 +14,14 @@
       --text:     #111827;
       --muted:    #6B7280;
       --border:   #E5E7EB;
-      --read:     #2563EB;
-      --read-bg:  #EFF6FF;
-      --gram:     #D97706;
-      --gram-bg:  #FFFBEB;
-      --spell:    #16A34A;
-      --spell-bg: #F0FDF4;
-      --vocab:    #9333EA;
-      --vocab-bg: #FAF5FF;
+      --number:     #2563EB;
+      --number-bg:  #EFF6FF;
+      --speech:     #D97706;
+      --speech-bg:  #FFFBEB;
+      --connect:    #16A34A;
+      --connect-bg: #F0FDF4;
+      --reference:    #9333EA;
+      --reference-bg: #FAF5FF;
     }
 
     body {
@@ -73,7 +73,7 @@
     .spinner {
       width: 34px; height: 34px;
       border: 3px solid var(--border);
-      border-top-color: var(--read);
+      border-top-color: var(--number);
       border-radius: 50%;
       animation: spin .8s linear infinite;
       margin: 0 auto 12px;
@@ -114,11 +114,11 @@
     .grade-btn::after {
       content: '';
       position: absolute; inset: 0;
-      background: linear-gradient(135deg, var(--read-bg), var(--vocab-bg));
+      background: linear-gradient(135deg, var(--number-bg), var(--reference-bg));
       opacity: 0; transition: opacity .2s;
     }
 
-    .grade-btn:hover { border-color: var(--read); transform: translateY(-3px); box-shadow: 0 10px 28px rgba(37,99,235,.13); }
+    .grade-btn:hover { border-color: var(--number); transform: translateY(-3px); box-shadow: 0 10px 28px rgba(37,99,235,.13); }
     .grade-btn:hover::after { opacity: 1; }
     .grade-btn > * { position: relative; z-index: 1; }
 
@@ -146,7 +146,7 @@
 
     .pbar-track { height: 7px; background: var(--border); border-radius: 100px; overflow: hidden; }
     .pbar-fill  {
-      height: 100%; border-radius: 100px; background: var(--read); width: 0%;
+      height: 100%; border-radius: 100px; background: var(--number); width: 0%;
       transition: width .45s cubic-bezier(.4,0,.2,1), background-color .4s ease;
     }
 
@@ -175,8 +175,8 @@
     }
 
     .opt-btn:hover:not(:disabled) { border-color: #93C5FD; background: #F8FAFF; }
-    .opt-btn.correct { border-color: var(--spell) !important; background: var(--spell-bg) !important; }
-    .opt-btn.correct .opt-letter { background: var(--spell); color: #fff; }
+    .opt-btn.correct { border-color: var(--connect) !important; background: var(--connect-bg) !important; }
+    .opt-btn.correct .opt-letter { background: var(--connect); color: #fff; }
     .opt-btn.wrong { border-color: #DC2626 !important; background: #FEF2F2 !important; }
     .opt-btn.wrong .opt-letter { background: #DC2626; color: #fff; }
     .opt-btn.faded { opacity: .35; }
@@ -186,7 +186,7 @@
       border-radius: 16px; padding: 14px 18px;
       margin-bottom: 12px; border-right: 5px solid; display: none;
     }
-    .feedback-box.ok  { background: var(--spell-bg); border-color: var(--spell); }
+    .feedback-box.ok  { background: var(--connect-bg); border-color: var(--connect); }
     .feedback-box.err { background: #FEF2F2;          border-color: #DC2626; }
 
     .fb-title { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
@@ -304,7 +304,7 @@
       font-size: 15px; font-weight: 600; color: var(--muted);
       cursor: pointer; transition: all .2s;
     }
-    .restart-btn:hover { border-color: #93C5FD; color: var(--read); }
+    .restart-btn:hover { border-color: #93C5FD; color: var(--number); }
 
     /* ───── RESPONSIVE ───── */
     @media (max-width: 480px) {
@@ -435,10 +435,17 @@
    הגדרות קטגוריות (אל תשנו את המפתחות)
    ════════════════════════════════════════ */
 const CATS = {
-  reading: { name: 'הבנת הנקרא', icon: '📖', color: '#2563EB', bg: '#EFF6FF' },
-  grammar: { name: 'דקדוק',       icon: '✏️', color: '#D97706', bg: '#FFFBEB' },
-  spelling:{ name: 'כתיב',        icon: '✍️', color: '#16A34A', bg: '#F0FDF4' },
-  vocab:   { name: 'אוצר מילים', icon: '💡', color: '#9333EA', bg: '#FAF5FF' }
+  'שם המספר':       { name: 'שם המספר',       icon: '🔢', color: '#2563EB', bg: '#EFF6FF' },
+  'זיהוי חלקי דיבר': { name: 'זיהוי חלקי דיבר', icon: '✏️', color: '#D97706', bg: '#FFFBEB' },
+  'מילות קישור':    { name: 'מילות קישור',    icon: '🔗', color: '#16A34A', bg: '#F0FDF4' },
+  'מאזכרים':        { name: 'מאזכרים',        icon: '🔎', color: '#9333EA', bg: '#FAF5FF' },
+  'תעודת זהות לטקסט': { name: 'תעודת זהות לטקסט', icon: '📄', color: '#2563EB', bg: '#EFF6FF' },
+  'מילות שאלה':     { name: 'מילות שאלה',     icon: '❓', color: '#D97706', bg: '#FFFBEB' },
+  'תורת הצורות':    { name: 'תורת הצורות',    icon: '🔤', color: '#16A34A', bg: '#F0FDF4' },
+  'חלקי דיבר':      { name: 'חלקי דיבר',      icon: '📝', color: '#9333EA', bg: '#FAF5FF' },
+  'תורת ההגה':      { name: 'תורת ההגה',      icon: '🔊', color: '#2563EB', bg: '#EFF6FF' },
+  'יחסים בין מילים': { name: 'יחסים בין מילים', icon: '↔️', color: '#D97706', bg: '#FFFBEB' },
+  'סוגי טקסט':      { name: 'סוגי טקסט',      icon: '📚', color: '#16A34A', bg: '#F0FDF4' }
 };
 
 /* ════════════════════════════════════════
@@ -547,8 +554,12 @@ function startQuiz(levelKey) {
   S.levelName  = level.displayName;
   S.questions  = interleave(level.questions);
   S.idx        = 0;
-  S.scores     = { reading: 0, grammar: 0, spelling: 0, vocab: 0 };
-  S.totals     = { reading: 0, grammar: 0, spelling: 0, vocab: 0 };
+  S.scores     = {};
+  S.totals     = {};
+  Object.keys(CATS).forEach(key => {
+    S.scores[key] = 0;
+    S.totals[key] = 0;
+  });
   S.questions.forEach(q => S.totals[q.category]++);
 
   showScreen('screen-quiz');
